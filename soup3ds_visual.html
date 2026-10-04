@@ -1,0 +1,1630 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Soup3DS Visual</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: light-dark(#f7f5f0, #15161a);
+      --surface: light-dark(#ffffff, #202227);
+      --surface-2: light-dark(#f1eee7, #282b31);
+      --text: light-dark(#24201b, #f3f0e9);
+      --muted: light-dark(#6b6257, #b5afa6);
+      --line: light-dark(#d8d0c4, #42464f);
+      --primary: light-dark(#196a70, #72d3d8);
+      --primary-text: light-dark(#ffffff, #09272a);
+      --green: light-dark(#2f7d51, #78d99a);
+      --orange: light-dark(#a15c16, #f2b56b);
+      --red: light-dark(#b83b47, #ff8e96);
+      --purple: light-dark(#674fa3, #b8a5ff);
+      --yellow: light-dark(#a07100, #f3cf63);
+      --shadow: light-dark(0 18px 45px rgba(65, 45, 25, 0.12), 0 18px 45px rgba(0, 0, 0, 0.28));
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      min-height: 38px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    button:hover:not(:disabled) {
+      border-color: var(--primary);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: var(--primary-text);
+    }
+
+    .ghost {
+      background: transparent;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 8px 10px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      min-width: 0;
+    }
+
+    label span {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+    }
+
+    header {
+      display: flex;
+      gap: 16px;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: 0;
+      line-height: 1.15;
+    }
+
+    h1 {
+      font-size: 1.35rem;
+    }
+
+    h2 {
+      font-size: 1.05rem;
+    }
+
+    h3 {
+      font-size: 0.95rem;
+    }
+
+    .header-copy {
+      display: grid;
+      gap: 2px;
+    }
+
+    .header-copy p,
+    .hint,
+    .status-line {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: var(--surface-2);
+      white-space: nowrap;
+    }
+
+    .status-badge::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--red);
+    }
+
+    .status-badge.ready::before {
+      background: var(--green);
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(140px, 1fr));
+      gap: 12px;
+      padding: 14px 22px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-2);
+    }
+
+    .dependency-panel {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: minmax(220px, 1.2fr) minmax(240px, 2fr) auto;
+      gap: 12px;
+      align-items: end;
+      padding-top: 4px;
+    }
+
+    .dependency-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .checks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .check {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 9px;
+      color: var(--muted);
+      background: var(--surface);
+      font-size: 0.86rem;
+      white-space: nowrap;
+    }
+
+    .check::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--red);
+    }
+
+    .check.ok::before {
+      background: var(--green);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(230px, 0.8fr) minmax(300px, 1.15fr) minmax(330px, 1.25fr);
+      min-height: 0;
+    }
+
+    .pane {
+      min-width: 0;
+      padding: 16px;
+      border-right: 1px solid var(--line);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 12px;
+      background: var(--bg);
+    }
+
+    .pane:last-child {
+      border-right: 0;
+    }
+
+    .pane-head {
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .block-list,
+    .script-list {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      min-height: 260px;
+    }
+
+    .palette {
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .block {
+      border: 1px solid var(--line);
+      border-left-width: 7px;
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: var(--shadow);
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .block[draggable="true"] {
+      cursor: grab;
+    }
+
+    .block:active {
+      cursor: grabbing;
+    }
+
+    .block.logic {
+      border-left-color: var(--purple);
+    }
+
+    .block.player {
+      border-left-color: var(--yellow);
+    }
+
+    .block.world {
+      border-left-color: var(--green);
+    }
+
+    .block.goal {
+      border-left-color: var(--orange);
+    }
+
+    .block.draw {
+      border-left-color: var(--primary);
+    }
+
+    .block.system {
+      border-left-color: var(--red);
+    }
+
+    .block-title {
+      display: flex;
+      gap: 8px;
+      align-items: start;
+      justify-content: space-between;
+      font-weight: 700;
+    }
+
+    .block-title small {
+      color: var(--muted);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .block-words {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .block-fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .block-fields label {
+      font-size: 0.82rem;
+    }
+
+    .block-fields input,
+    .block-fields select {
+      min-height: 34px;
+      padding: 6px 8px;
+    }
+
+    .script-shell {
+      display: grid;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .dropzone {
+      min-height: 320px;
+      padding: 12px;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--surface-2) 72%, transparent);
+      overflow: auto;
+    }
+
+    .dropzone.drag-over {
+      border-color: var(--primary);
+      background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+    }
+
+    .empty {
+      min-height: 120px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      text-align: center;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .script-block {
+      position: relative;
+    }
+
+    .script-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .script-actions button {
+      min-height: 32px;
+      padding: 5px 8px;
+      font-size: 0.84rem;
+    }
+
+    .inner-slot {
+      display: grid;
+      gap: 8px;
+      min-height: 54px;
+      padding: 10px;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--surface-2) 80%, transparent);
+    }
+
+    .inner-slot.drag-over {
+      border-color: var(--primary);
+    }
+
+    .locked {
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    .preview-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .preview-tabs button[aria-pressed="true"] {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: var(--primary-text);
+    }
+
+    .preview {
+      display: grid;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    pre {
+      margin: 0;
+      min-height: 460px;
+      max-height: calc(100vh - 320px);
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: light-dark(#1f2424, #0d1014);
+      color: #f3f0e9;
+      padding: 14px;
+      tab-size: 4;
+      font: 0.88rem/1.45 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      white-space: pre;
+    }
+
+    .footer-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 1080px) {
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .pane {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      pre {
+        max-height: none;
+      }
+    }
+
+    @media (max-width: 760px) {
+      header {
+        align-items: start;
+        flex-direction: column;
+      }
+
+      .topbar,
+      .dependency-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .dependency-actions {
+        justify-content: start;
+      }
+
+      .block-fields {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="header-copy">
+        <h1>Soup3DS Visual</h1>
+        <p>Blocks in, homebrew C project out.</p>
+      </div>
+      <span id="readyBadge" class="status-badge">Toolchain locked</span>
+    </header>
+
+    <section class="topbar" aria-label="Project settings">
+      <label>
+        <span>Game name</span>
+        <input id="gameName" value="My First Soup" autocomplete="off">
+      </label>
+      <label>
+        <span>Author</span>
+        <input id="authorName" value="New Homebrew Dev" autocomplete="off">
+      </label>
+      <label>
+        <span>System</span>
+        <select id="platformSelect">
+          <option value="3ds">Nintendo 3DS</option>
+          <option value="ds">Nintendo DS</option>
+        </select>
+      </label>
+      <label>
+        <span>Style</span>
+        <select id="styleSelect">
+          <option value="2d">2D</option>
+          <option value="3d">3D</option>
+        </select>
+      </label>
+
+      <div class="dependency-panel">
+        <div>
+          <h2>Dependencies</h2>
+          <p id="dependencyMessage" class="status-line">Show a devkitPro folder to unlock the workbench.</p>
+        </div>
+        <div id="dependencyChecks" class="checks" aria-live="polite"></div>
+        <div class="dependency-actions">
+          <button id="pickFolder" type="button">Show folder</button>
+          <button id="pickFiles" type="button" class="ghost">Show files</button>
+          <input id="folderFallback" class="hidden" type="file" webkitdirectory multiple>
+          <input id="fileProof" class="hidden" type="file" multiple>
+        </div>
+        <label>
+          <span>Manual DEVKITPRO path</span>
+          <input id="manualDevkitpro" placeholder="Example: C:\devkitPro" autocomplete="off">
+        </label>
+        <label>
+          <span>Manual DEVKITARM path</span>
+          <input id="manualDevkitarm" placeholder="Example: C:\devkitPro\devkitARM" autocomplete="off">
+        </label>
+        <label>
+          <span>Manual make path</span>
+          <input id="manualMake" placeholder="Example: C:\devkitPro\msys2\usr\bin\make.exe" autocomplete="off">
+        </label>
+      </div>
+    </section>
+
+    <main class="workspace">
+      <section class="pane" aria-label="Block palette">
+        <div class="pane-head">
+          <div>
+            <h2>Blocks</h2>
+            <p class="hint">Click or drag.</p>
+          </div>
+          <button id="resetDemo" type="button" class="ghost">Demo</button>
+        </div>
+        <div id="palette" class="palette block-list"></div>
+      </section>
+
+      <section class="pane" aria-label="Game script">
+        <div class="pane-head">
+          <div>
+            <h2>Game script</h2>
+            <p id="scriptHint" class="hint">Locked until dependencies are shown.</p>
+          </div>
+          <button id="clearScript" type="button" class="ghost">Clear</button>
+        </div>
+        <div class="script-shell">
+          <div id="scriptDrop" class="dropzone" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="pane" aria-label="Generated project">
+        <div class="pane-head">
+          <div>
+            <h2>Generated files</h2>
+            <p id="fileStatus" class="hint">source/main.c</p>
+          </div>
+          <div class="preview-tabs" id="previewTabs"></div>
+        </div>
+        <div class="preview">
+          <pre><code id="codePreview"></code></pre>
+          <div class="footer-actions">
+            <button id="copyCode" type="button">Copy shown file</button>
+            <button id="exportProject" type="button" class="primary" disabled>Export project</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    "use strict";
+
+    const elements = {
+      gameName: document.getElementById("gameName"),
+      authorName: document.getElementById("authorName"),
+      platform: document.getElementById("platformSelect"),
+      style: document.getElementById("styleSelect"),
+      palette: document.getElementById("palette"),
+      scriptDrop: document.getElementById("scriptDrop"),
+      dependencyChecks: document.getElementById("dependencyChecks"),
+      dependencyMessage: document.getElementById("dependencyMessage"),
+      readyBadge: document.getElementById("readyBadge"),
+      pickFolder: document.getElementById("pickFolder"),
+      pickFiles: document.getElementById("pickFiles"),
+      folderFallback: document.getElementById("folderFallback"),
+      fileProof: document.getElementById("fileProof"),
+      manualDevkitpro: document.getElementById("manualDevkitpro"),
+      manualDevkitarm: document.getElementById("manualDevkitarm"),
+      manualMake: document.getElementById("manualMake"),
+      scriptHint: document.getElementById("scriptHint"),
+      resetDemo: document.getElementById("resetDemo"),
+      clearScript: document.getElementById("clearScript"),
+      previewTabs: document.getElementById("previewTabs"),
+      codePreview: document.getElementById("codePreview"),
+      fileStatus: document.getElementById("fileStatus"),
+      copyCode: document.getElementById("copyCode"),
+      exportProject: document.getElementById("exportProject")
+    };
+
+    const blockDefs = {
+      background: {
+        title: "paint the top screen",
+        category: "world",
+        words: "Fill the playfield with a color.",
+        targets: ["3ds-2d", "ds-2d"],
+        defaults: { color: "#1c2334" },
+        fields: [{ key: "color", label: "Color", type: "color" }]
+      },
+      player: {
+        title: "make a player",
+        category: "player",
+        words: "Create the square the D-pad moves.",
+        targets: ["3ds-2d", "ds-2d"],
+        defaults: { color: "#ffde59", size: 16, speed: 2 },
+        fields: [
+          { key: "color", label: "Color", type: "color" },
+          { key: "size", label: "Size", type: "number", min: 6, max: 48 },
+          { key: "speed", label: "Speed", type: "number", min: 1, max: 8 }
+        ]
+      },
+      movePlayer: {
+        title: "move player with D-pad",
+        category: "logic",
+        words: "Turn button presses into X/Y movement.",
+        targets: ["3ds-2d", "ds-2d"],
+        defaults: {},
+        fields: []
+      },
+      keepOnscreen: {
+        title: "keep player on screen",
+        category: "logic",
+        words: "Clamp X/Y so the player cannot vanish.",
+        targets: ["3ds-2d", "ds-2d"],
+        defaults: {},
+        fields: []
+      },
+      goal: {
+        title: "place a goal",
+        category: "goal",
+        words: "Add a rectangle the player can touch.",
+        targets: ["3ds-2d", "ds-2d"],
+        defaults: { x: 340, y: 24, w: 42, h: 34, color: "#53cd95" },
+        fields: [
+          { key: "x", label: "X", type: "number", min: 0, max: 380 },
+          { key: "y", label: "Y", type: "number", min: 0, max: 220 },
+          { key: "w", label: "Width", type: "number", min: 8, max: 96 },
+          { key: "h", label: "Height", type: "number", min: 8, max: 96 },
+          { key: "color", label: "Color", type: "color" }
+        ]
+      },
+      touchGoal: {
+        title: "when player touches goal",
+        category: "logic",
+        words: "Run the blocks inside this slot.",
+        targets: ["3ds-2d", "ds-2d"],
+        container: true,
+        defaults: {},
+        fields: []
+      },
+      addScore: {
+        title: "add to score",
+        category: "goal",
+        words: "Increase the score number.",
+        targets: ["3ds-2d", "ds-2d"],
+        defaults: { amount: 1 },
+        fields: [{ key: "amount", label: "Amount", type: "number", min: 1, max: 9 }]
+      },
+      resetPlayer: {
+        title: "send player to center",
+        category: "player",
+        words: "Move the player back after scoring.",
+        targets: ["3ds-2d", "ds-2d"],
+        defaults: {},
+        fields: []
+      },
+      drawEverything: {
+        title: "draw player, goal, score",
+        category: "draw",
+        words: "Render the current game state.",
+        targets: ["3ds-2d", "ds-2d"],
+        defaults: {},
+        fields: []
+      },
+      sceneColor: {
+        title: "clear 3D scene",
+        category: "world",
+        words: "Paint the 3D render target.",
+        targets: ["3ds-3d"],
+        defaults: { red: 40, green: 90, blue: 150 },
+        fields: [
+          { key: "red", label: "Red", type: "number", min: 0, max: 255 },
+          { key: "green", label: "Green", type: "number", min: 0, max: 255 },
+          { key: "blue", label: "Blue", type: "number", min: 0, max: 255 }
+        ]
+      },
+      dpadShift: {
+        title: "D-pad changes scene",
+        category: "logic",
+        words: "Use left and right to change the frame color.",
+        targets: ["3ds-3d"],
+        defaults: { speed: 1 },
+        fields: [{ key: "speed", label: "Speed", type: "number", min: 1, max: 8 }]
+      },
+      pulseScene: {
+        title: "pulse over time",
+        category: "draw",
+        words: "Animate the scene every frame.",
+        targets: ["3ds-3d"],
+        defaults: { speed: 0.35 },
+        fields: [{ key: "speed", label: "Speed", type: "number", min: 0.05, max: 2, step: 0.05 }]
+      }
+    };
+
+    const state = {
+      script: [],
+      dragged: null,
+      previewFile: "source/main.c",
+      scannedPaths: [],
+      manualTouched: false
+    };
+
+    function uid() {
+      return "b" + Math.random().toString(36).slice(2, 10);
+    }
+
+    function targetKey() {
+      return `${elements.platform.value}-${elements.style.value}`;
+    }
+
+    function slugify(value) {
+      const cleaned = value.trim().replace(/[^A-Za-z0-9_-]+/g, "-").replace(/^[-_]+|[-_]+$/g, "");
+      if (!cleaned) return "my-game";
+      return /^[0-9]/.test(cleaned) ? `game-${cleaned.toLowerCase()}` : cleaned.toLowerCase();
+    }
+
+    function titleText() {
+      return elements.gameName.value.trim().replace(/\s+/g, " ") || "My Game";
+    }
+
+    function cString(value) {
+      return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    }
+
+    function num(value, fallback) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    }
+
+    function hexToC2D(hex) {
+      const clean = hex.replace("#", "");
+      const red = parseInt(clean.slice(0, 2), 16);
+      const green = parseInt(clean.slice(2, 4), 16);
+      const blue = parseInt(clean.slice(4, 6), 16);
+      return `C2D_Color32(${red}, ${green}, ${blue}, 255)`;
+    }
+
+    function hexToConsoleName(hex) {
+      const clean = hex.toLowerCase();
+      if (clean.includes("ffde")) return "yellow";
+      if (clean.includes("53cd") || clean.includes("78d9")) return "green";
+      if (clean.includes("ff") || clean.includes("b8")) return "red";
+      return "bright";
+    }
+
+    function makeBlock(type) {
+      const def = blockDefs[type];
+      return {
+        id: uid(),
+        type,
+        values: { ...def.defaults },
+        children: def.container ? [] : undefined
+      };
+    }
+
+    function dependencyRequirements() {
+      const key = targetKey();
+      if (key === "3ds-2d") return ["devkitARM", "libctru", "citro2d", "citro3d", "make"];
+      if (key === "3ds-3d") return ["devkitARM", "libctru", "citro3d", "make"];
+      return ["devkitARM", "libnds", "make"];
+    }
+
+    function detectedDependencies() {
+      const paths = state.scannedPaths.map((path) => path.toLowerCase());
+      const baseNames = paths.map((path) => path.split(/[\\/]/).pop());
+      const has = (needles) => paths.some((path) => needles.some((needle) => path.includes(needle)));
+      return {
+        devkitARM: has(["devkitarm", "3ds_rules", "ds_rules"]),
+        libctru: has(["libctru", "ctru.h", "3ds.h"]),
+        citro2d: has(["citro2d", "citro2d.h"]),
+        citro3d: has(["citro3d", "citro3d.h"]),
+        libnds: has(["libnds", "nds.h", "ds_rules"]),
+        make: baseNames.some((name) => ["make", "make.exe", "gmake", "gmake.exe", "gnumake", "gnumake.exe"].includes(name))
+      };
+    }
+
+    function dependenciesReady() {
+      const detected = detectedDependencies();
+      return dependencyRequirements().every((name) => detected[name]);
+    }
+
+    function addBlock(type, parentId = null, index = null) {
+      if (!dependenciesReady()) return;
+      const block = makeBlock(type);
+      if (parentId) {
+        const parent = findBlock(parentId, state.script);
+        if (parent && parent.children) {
+          parent.children.splice(index ?? parent.children.length, 0, block);
+        }
+      } else {
+        state.script.splice(index ?? state.script.length, 0, block);
+      }
+      render();
+    }
+
+    function removeBlock(id, list = state.script) {
+      const index = list.findIndex((block) => block.id === id);
+      if (index >= 0) {
+        list.splice(index, 1);
+        return true;
+      }
+      for (const block of list) {
+        if (block.children && removeBlock(id, block.children)) return true;
+      }
+      return false;
+    }
+
+    function findBlock(id, list = state.script) {
+      for (const block of list) {
+        if (block.id === id) return block;
+        if (block.children) {
+          const found = findBlock(id, block.children);
+          if (found) return found;
+        }
+      }
+      return null;
+    }
+
+    function findBlockOfType(type, fallback = {}) {
+      const stack = [...state.script];
+      while (stack.length) {
+        const block = stack.shift();
+        if (block.type === type) return block.values;
+        if (block.children) stack.push(...block.children);
+      }
+      return fallback;
+    }
+
+    function moveBlock(id, direction) {
+      function moveIn(list) {
+        const index = list.findIndex((block) => block.id === id);
+        if (index >= 0) {
+          const next = index + direction;
+          if (next >= 0 && next < list.length) {
+            const [block] = list.splice(index, 1);
+            list.splice(next, 0, block);
+          }
+          return true;
+        }
+        return list.some((block) => block.children && moveIn(block.children));
+      }
+      moveIn(state.script);
+      render();
+    }
+
+    function currentDefs() {
+      const key = targetKey();
+      return Object.entries(blockDefs).filter(([, def]) => def.targets.includes(key));
+    }
+
+    function renderPalette() {
+      elements.palette.innerHTML = "";
+      for (const [type, def] of currentDefs()) {
+        const block = document.createElement("button");
+        block.type = "button";
+        block.className = `block ${def.category}`;
+        block.draggable = dependenciesReady();
+        block.disabled = !dependenciesReady();
+        block.dataset.type = type;
+        block.innerHTML = `<span class="block-title"><span>${def.title}</span><small>${def.category}</small></span><span class="block-words">${def.words}</span>`;
+        block.addEventListener("click", () => addBlock(type));
+        block.addEventListener("dragstart", (event) => {
+          state.dragged = { type };
+          event.dataTransfer.setData("text/plain", type);
+        });
+        elements.palette.appendChild(block);
+      }
+    }
+
+    function renderFields(block) {
+      const def = blockDefs[block.type];
+      if (!def.fields.length) return "";
+      const fields = def.fields.map((field) => {
+        const value = block.values[field.key];
+        const attrs = [
+          `data-block-id="${block.id}"`,
+          `data-field="${field.key}"`,
+          `type="${field.type}"`,
+          field.min !== undefined ? `min="${field.min}"` : "",
+          field.max !== undefined ? `max="${field.max}"` : "",
+          field.step !== undefined ? `step="${field.step}"` : "",
+          `value="${value}"`
+        ].filter(Boolean).join(" ");
+        return `<label><span>${field.label}</span><input ${attrs}></label>`;
+      }).join("");
+      return `<div class="block-fields">${fields}</div>`;
+    }
+
+    function renderScriptList(list, parentId = null) {
+      if (!list.length) {
+        return `<div class="empty">${parentId ? "Drop blocks here." : "Add blocks from the palette."}</div>`;
+      }
+      return list.map((block, index) => renderScriptBlock(block, index, list.length)).join("");
+    }
+
+    function renderScriptBlock(block, index, count) {
+      const def = blockDefs[block.type];
+      const inner = def.container
+        ? `<div class="inner-slot" data-parent-id="${block.id}">${renderScriptList(block.children, block.id)}</div>`
+        : "";
+      return `
+        <article class="block script-block ${def.category}" draggable="true" data-block-id="${block.id}">
+          <div class="block-title">
+            <span>${def.title}</span>
+            <small>${index + 1}/${count}</small>
+          </div>
+          <div class="block-words">${def.words}</div>
+          ${renderFields(block)}
+          ${inner}
+          <div class="script-actions">
+            <button type="button" data-action="up" data-block-id="${block.id}">Up</button>
+            <button type="button" data-action="down" data-block-id="${block.id}">Down</button>
+            <button type="button" data-action="delete" data-block-id="${block.id}">Delete</button>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderScript() {
+      elements.scriptDrop.classList.toggle("locked", !dependenciesReady());
+      elements.scriptDrop.innerHTML = renderScriptList(state.script);
+      elements.scriptHint.textContent = dependenciesReady() ? "Ready." : "Locked until dependencies are shown.";
+    }
+
+    function renderDependencies() {
+      const detected = detectedDependencies();
+      const needed = dependencyRequirements();
+      elements.dependencyChecks.innerHTML = needed.map((name) => (
+        `<span class="check ${detected[name] ? "ok" : ""}">${name}</span>`
+      )).join("");
+      const ready = dependenciesReady();
+      elements.readyBadge.classList.toggle("ready", ready);
+      elements.readyBadge.textContent = ready ? "Toolchain shown" : "Toolchain locked";
+      elements.dependencyMessage.textContent = ready
+        ? "Workbench unlocked."
+        : state.manualTouched
+          ? "Manual paths are recorded; use Show folder or Show files so the browser can verify them."
+          : "Run install_dependencies.bat, then show .deps/devkitPro to unlock the workbench.";
+      elements.exportProject.disabled = !ready;
+    }
+
+    function generate3ds2dSource() {
+      const player = findBlockOfType("player", blockDefs.player.defaults);
+      const goal = findBlockOfType("goal", blockDefs.goal.defaults);
+      const background = findBlockOfType("background", blockDefs.background.defaults);
+      const hasMove = hasBlock("movePlayer");
+      const hasClamp = hasBlock("keepOnscreen");
+      const hasDraw = hasBlock("drawEverything");
+      const touch = getContainer("touchGoal");
+      const playerSize = num(player.size, 16);
+      const half = Math.max(3, playerSize / 2);
+      const speed = num(player.speed, 2);
+      const goalX = num(goal.x, 340);
+      const goalY = num(goal.y, 24);
+      const goalW = num(goal.w, 42);
+      const goalH = num(goal.h, 34);
+      const addScore = touch.children.find((block) => block.type === "addScore");
+      const reset = touch.children.some((block) => block.type === "resetPlayer");
+      const scoreAmount = addScore ? num(addScore.values.amount, 1) : 0;
+      const collisionLines = [];
+      if (scoreAmount) collisionLines.push(`            score += ${scoreAmount};`);
+      if (reset) {
+        collisionLines.push("            x = TOP_WIDTH * 0.5f;");
+        collisionLines.push("            y = TOP_HEIGHT * 0.5f;");
+      }
+      const collision = touch.exists ? `
+        if (x + ${half.toFixed(1)}f > ${goalX.toFixed(1)}f && x - ${half.toFixed(1)}f < ${(goalX + goalW).toFixed(1)}f &&
+            y + ${half.toFixed(1)}f > ${goalY.toFixed(1)}f && y - ${half.toFixed(1)}f < ${(goalY + goalH).toFixed(1)}f) {
+${collisionLines.length ? collisionLines.join("\n") : "            /* Add score or reset blocks inside the touch block. */"}
+        }
+` : "";
+      return `#include <3ds.h>
+#include <citro2d.h>
+
+#define TOP_WIDTH 400.0f
+#define TOP_HEIGHT 240.0f
+
+static float clampf(float value, float low, float high) {
+    if (value < low) return low;
+    if (value > high) return high;
+    return value;
+}
+
+int main(void) {
+    gfxInitDefault();
+    C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
+    C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
+    C2D_Prepare();
+
+    C3D_RenderTarget* top = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
+    C3D_RenderTarget* bottom = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
+
+    const u32 background = ${hexToC2D(background.color || "#1c2334")};
+    const u32 playerColor = ${hexToC2D(player.color || "#ffde59")};
+    const u32 goalColor = ${hexToC2D(goal.color || "#53cd95")};
+    const u32 panelColor = C2D_Color32(48, 55, 64, 255);
+
+    float x = TOP_WIDTH * 0.5f;
+    float y = TOP_HEIGHT * 0.5f;
+    int score = 0;
+
+    while (aptMainLoop()) {
+        hidScanInput();
+        const u32 down = hidKeysDown();
+        const u32 held = hidKeysHeld();
+
+        if (down & KEY_START) break;
+${hasMove ? `
+        if (held & KEY_LEFT) x -= ${speed.toFixed(1)}f;
+        if (held & KEY_RIGHT) x += ${speed.toFixed(1)}f;
+        if (held & KEY_UP) y -= ${speed.toFixed(1)}f;
+        if (held & KEY_DOWN) y += ${speed.toFixed(1)}f;
+` : "        /* Add a movement block to read the D-pad. */\n"}
+${hasClamp ? `
+        x = clampf(x, ${half.toFixed(1)}f, TOP_WIDTH - ${half.toFixed(1)}f);
+        y = clampf(y, ${half.toFixed(1)}f, TOP_HEIGHT - ${half.toFixed(1)}f);
+` : ""}
+${collision}
+        C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+
+        C2D_TargetClear(top, background);
+        C2D_SceneBegin(top);
+${hasDraw ? `        C2D_DrawRectSolid(${goalX.toFixed(1)}f, ${goalY.toFixed(1)}f, 0.0f, ${goalW.toFixed(1)}f, ${goalH.toFixed(1)}f, goalColor);
+        C2D_DrawRectSolid(x - ${half.toFixed(1)}f, y - ${half.toFixed(1)}f, 0.0f, ${playerSize.toFixed(1)}f, ${playerSize.toFixed(1)}f, playerColor);
+` : "        /* Add a draw block to render the player and goal. */\n"}
+        C2D_TargetClear(bottom, C2D_Color32(18, 20, 30, 255));
+        C2D_SceneBegin(bottom);
+        C2D_DrawRectSolid(14.0f, 18.0f, 0.0f, 292.0f, 76.0f, panelColor);
+        C2D_DrawRectSolid(34.0f, 46.0f, 0.0f, 24.0f, 24.0f, playerColor);
+        C2D_DrawRectSolid(250.0f, 34.0f, 0.0f, 10.0f + (score % 10) * 4.0f, 20.0f, goalColor);
+
+        C3D_FrameEnd(0);
+    }
+
+    C2D_Fini();
+    C3D_Fini();
+    gfxExit();
+    return 0;
+}
+`;
+    }
+
+    function generateDs2dSource() {
+      const player = findBlockOfType("player", blockDefs.player.defaults);
+      const goal = findBlockOfType("goal", { x: 27, y: 5, w: 2, h: 1, color: "#53cd95" });
+      const hasMove = hasBlock("movePlayer");
+      const hasClamp = hasBlock("keepOnscreen");
+      const hasDraw = hasBlock("drawEverything");
+      const touch = getContainer("touchGoal");
+      const addScore = touch.children.find((block) => block.type === "addScore");
+      const reset = touch.children.some((block) => block.type === "resetPlayer");
+      const scoreAmount = addScore ? num(addScore.values.amount, 1) : 0;
+      const speed = Math.max(1, Math.round(num(player.speed, 1)));
+      const gx = Math.max(1, Math.min(30, Math.round(num(goal.x, 340) / 13)));
+      const gy = Math.max(3, Math.min(21, Math.round(num(goal.y, 24) / 10)));
+      const collisionLines = [];
+      if (scoreAmount) collisionLines.push(`            score += ${scoreAmount};`);
+      if (reset) {
+        collisionLines.push("            x = 15;");
+        collisionLines.push("            y = 10;");
+      }
+      return `#include <nds.h>
+#include <stdio.h>
+
+static int clampi(int value, int low, int high) {
+    if (value < low) return low;
+    if (value > high) return high;
+    return value;
+}
+
+int main(void) {
+    consoleDemoInit();
+
+    int x = 15;
+    int y = 10;
+    int score = 0;
+
+    while (1) {
+        scanKeys();
+        const int held = keysHeld();
+
+${hasMove ? `        if (held & KEY_LEFT) x -= ${speed};
+        if (held & KEY_RIGHT) x += ${speed};
+        if (held & KEY_UP) y -= ${speed};
+        if (held & KEY_DOWN) y += ${speed};
+` : "        /* Add a movement block to read the D-pad. */\n"}
+${hasClamp ? `        x = clampi(x, 1, 30);
+        y = clampi(y, 3, 21);
+` : ""}
+${touch.exists ? `        if (x == ${gx} && y == ${gy}) {
+${collisionLines.length ? collisionLines.join("\n") : "            /* Add score or reset blocks inside the touch block. */"}
+        }
+` : ""}
+        consoleClear();
+${hasDraw ? `        iprintf("${cString(titleText())}\\\\n");
+        iprintf("Player color idea: ${hexToConsoleName(player.color || "#ffde59")}\\\\n");
+        iprintf("Score: %d\\\\n", score);
+        iprintf("\\\\x1b[${gy};${gx}HG");
+        iprintf("\\\\x1b[%d;%dH@", y, x);
+` : "        iprintf(\"Add a draw block to show the game.\\\\n\");\n"}
+        swiWaitForVBlank();
+    }
+}
+`;
+    }
+
+    function generate3ds3dSource() {
+      const scene = findBlockOfType("sceneColor", blockDefs.sceneColor.defaults);
+      const shift = findBlockOfType("dpadShift", blockDefs.dpadShift.defaults);
+      const pulse = findBlockOfType("pulseScene", blockDefs.pulseScene.defaults);
+      const red = Math.max(0, Math.min(255, Math.round(num(scene.red, 40))));
+      const green = Math.max(0, Math.min(255, Math.round(num(scene.green, 90))));
+      const blue = Math.max(0, Math.min(255, Math.round(num(scene.blue, 150))));
+      return `#include <3ds.h>
+#include <citro3d.h>
+
+#define DISPLAY_TRANSFER_FLAGS \\
+    (GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \\
+     GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \\
+     GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
+
+static u32 scene_color(float t) {
+    const u8 red = (u8)(${red} + ((int)t % 80));
+    const u8 green = (u8)(${green} + (((int)t * 2) % 70));
+    const u8 blue = ${blue};
+    return (red << 24) | (green << 16) | (blue << 8) | 0xff;
+}
+
+int main(void) {
+    gfxInitDefault();
+    C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
+
+    C3D_RenderTarget* top = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+    C3D_RenderTargetSetOutput(top, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
+
+    float t = 0.0f;
+
+    while (aptMainLoop()) {
+        hidScanInput();
+        const u32 down = hidKeysDown();
+        const u32 held = hidKeysHeld();
+
+        if (down & KEY_START) break;
+${hasBlock("dpadShift") ? `        if (held & KEY_LEFT) t -= ${num(shift.speed, 1).toFixed(1)}f;
+        if (held & KEY_RIGHT) t += ${num(shift.speed, 1).toFixed(1)}f;
+` : ""}
+${hasBlock("pulseScene") ? `        t += ${num(pulse.speed, 0.35).toFixed(2)}f;
+` : ""}
+        C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+        C3D_RenderTargetClear(top, C3D_CLEAR_ALL, scene_color(t), 0);
+        C3D_FrameDrawOn(top);
+        C3D_FrameEnd(0);
+    }
+
+    C3D_Fini();
+    gfxExit();
+    return 0;
+}
+`;
+    }
+
+    function hasBlock(type, list = state.script) {
+      return list.some((block) => block.type === type || (block.children && hasBlock(type, block.children)));
+    }
+
+    function getContainer(type) {
+      const block = state.script.find((item) => item.type === type);
+      return block ? { exists: true, children: block.children || [] } : { exists: false, children: [] };
+    }
+
+    function makefile3ds() {
+      const slug = slugify(titleText());
+      const libs = elements.style.value === "2d" ? "-lcitro2d -lcitro3d -lctru -lm" : "-lcitro3d -lctru -lm";
+      return `ifeq ($(strip $(DEVKITPRO)),)
+$(error "Please set DEVKITPRO in your environment.")
+endif
+
+TOPDIR ?= $(CURDIR)
+include $(DEVKITPRO)/devkitARM/3ds_rules
+
+TARGET := ${slug}
+BUILD := build
+SOURCES := source
+DATA := data
+INCLUDES := include
+
+APP_TITLE := ${titleText()}
+APP_DESCRIPTION := Made with Soup3DS Visual
+APP_AUTHOR := ${elements.authorName.value || "New Homebrew Dev"}
+
+ARCH := -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
+CFLAGS := -g -Wall -O2 -mword-relocations -ffunction-sections $(ARCH)
+CFLAGS += $(INCLUDE) -DARM11 -D_3DS
+ASFLAGS := -g $(ARCH)
+LDFLAGS = -specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
+
+LIBS := ${libs}
+LIBDIRS := $(CTRULIB)
+
+ifneq ($(BUILD),$(notdir $(CURDIR)))
+
+export OUTPUT := $(CURDIR)/$(TARGET)
+export TOPDIR := $(CURDIR)
+export VPATH := $(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) $(foreach dir,$(DATA),$(CURDIR)/$(dir))
+export DEPSDIR := $(CURDIR)/$(BUILD)
+
+CFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
+SFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
+BINFILES := $(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
+
+export OFILES := $(addsuffix .o,$(BINFILES)) $(CFILES:.c=.o) $(SFILES:.s=.o)
+export INCLUDE := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) $(foreach dir,$(LIBDIRS),-I$(dir)/include)
+export LIBPATHS := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
+
+.PHONY: all clean $(BUILD)
+
+all: $(BUILD)
+
+$(BUILD):
+\t@[ -d $@ ] || mkdir -p $@
+\t@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+
+clean:
+\t@echo clean ...
+\t@rm -fr $(BUILD) $(TARGET).3dsx $(TARGET).smdh $(TARGET).elf
+
+else
+
+DEPENDS := $(OFILES:.o=.d)
+
+$(OUTPUT).3dsx: $(OUTPUT).elf
+$(OUTPUT).elf: $(OFILES)
+
+%.bin.o: %.bin
+\t@echo $(notdir $<)
+\t@$(bin2o)
+
+-include $(DEPENDS)
+
+endif
+`;
+    }
+
+    function makefileDs() {
+      const slug = slugify(titleText());
+      return `ifeq ($(strip $(DEVKITPRO)),)
+$(error "Please set DEVKITPRO in your environment.")
+endif
+
+TOPDIR ?= $(CURDIR)
+include $(DEVKITPRO)/devkitARM/ds_rules
+
+TARGET := ${slug}
+BUILD := build
+SOURCES := source
+INCLUDES := include
+
+ARCH := -mthumb -mthumb-interwork
+CFLAGS := -g -Wall -O2 $(ARCH)
+CFLAGS += $(INCLUDE) -DARM9
+ASFLAGS := -g $(ARCH)
+LDFLAGS := -specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
+
+LIBS := -lnds9
+LIBDIRS := $(LIBNDS)
+
+ifneq ($(BUILD),$(notdir $(CURDIR)))
+
+export OUTPUT := $(CURDIR)/$(TARGET)
+export TOPDIR := $(CURDIR)
+export VPATH := $(foreach dir,$(SOURCES),$(CURDIR)/$(dir))
+export DEPSDIR := $(CURDIR)/$(BUILD)
+
+CFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
+SFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
+
+export OFILES := $(CFILES:.c=.o) $(SFILES:.s=.o)
+export INCLUDE := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) $(foreach dir,$(LIBDIRS),-I$(dir)/include)
+export LIBPATHS := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
+
+.PHONY: all clean $(BUILD)
+
+all: $(BUILD)
+
+$(BUILD):
+\t@[ -d $@ ] || mkdir -p $@
+\t@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+
+clean:
+\t@echo clean ...
+\t@rm -fr $(BUILD) $(TARGET).nds $(TARGET).elf
+
+else
+
+DEPENDS := $(OFILES:.o=.d)
+
+$(OUTPUT).nds: $(OUTPUT).elf
+$(OUTPUT).elf: $(OFILES)
+
+-include $(DEPENDS)
+
+endif
+`;
+    }
+
+    function readme() {
+      const target = elements.platform.value === "3ds" ? "Nintendo 3DS" : "Nintendo DS";
+      const output = elements.platform.value === "3ds" ? `${slugify(titleText())}.3dsx` : `${slugify(titleText())}.nds`;
+      return `# ${titleText()}
+
+Generated by Soup3DS Visual.
+
+Target: ${target}
+Style: ${elements.style.value.toUpperCase()}
+
+## Build
+
+\`\`\`sh
+make
+\`\`\`
+
+The build should create \`${output}\`.
+
+## Controls
+
+- D-pad: move or change the scene.
+- START: quit on 3DS.
+
+## Files
+
+- \`source/main.c\`: generated from visual blocks.
+- \`Makefile\`: devkitPro build setup.
+`;
+    }
+
+    function gitignore() {
+      return `build/
+*.elf
+*.3dsx
+*.smdh
+*.cia
+*.nds
+*.map
+*.d
+*.o
+`;
+    }
+
+    function generatedFiles() {
+      const source = elements.platform.value === "3ds"
+        ? (elements.style.value === "2d" ? generate3ds2dSource() : generate3ds3dSource())
+        : generateDs2dSource();
+      const files = {
+        "README.md": readme(),
+        ".gitignore": gitignore(),
+        "Makefile": elements.platform.value === "3ds" ? makefile3ds() : makefileDs(),
+        "source/main.c": source,
+        "include/.gitkeep": ""
+      };
+      if (elements.platform.value === "3ds") files["data/.gitkeep"] = "";
+      return files;
+    }
+
+    function renderPreviewTabs(files) {
+      if (!files[state.previewFile]) state.previewFile = "source/main.c";
+      elements.previewTabs.innerHTML = Object.keys(files).map((path) => (
+        `<button type="button" data-preview="${path}" aria-pressed="${path === state.previewFile}">${path}</button>`
+      )).join("");
+    }
+
+    function renderPreview() {
+      const files = generatedFiles();
+      renderPreviewTabs(files);
+      elements.codePreview.textContent = files[state.previewFile] ?? "";
+      elements.fileStatus.textContent = state.previewFile;
+    }
+
+    function render() {
+      if (elements.platform.value === "ds") {
+        elements.style.value = "2d";
+        [...elements.style.options].forEach((option) => {
+          option.disabled = option.value === "3d";
+        });
+      } else {
+        [...elements.style.options].forEach((option) => {
+          option.disabled = false;
+        });
+      }
+      renderDependencies();
+      renderPalette();
+      renderScript();
+      renderPreview();
+    }
+
+    async function scanHandle(handle, prefix = "", found = [], limit = { count: 0 }) {
+      if (limit.count > 2500) return found;
+      for await (const [name, child] of handle.entries()) {
+        const path = `${prefix}/${name}`;
+        found.push(path);
+        limit.count++;
+        if (child.kind === "directory") {
+          await scanHandle(child, path, found, limit);
+        }
+        if (limit.count > 2500) break;
+      }
+      return found;
+    }
+
+    async function pickFolder() {
+      if ("showDirectoryPicker" in window) {
+        try {
+          const handle = await window.showDirectoryPicker();
+          state.scannedPaths = await scanHandle(handle, handle.name);
+          render();
+          return;
+        } catch (error) {
+          if (error.name === "AbortError") return;
+        }
+      }
+      elements.folderFallback.click();
+    }
+
+    function scanFallbackFiles(files) {
+      state.scannedPaths = [...files].map((file) => file.webkitRelativePath || file.name);
+      render();
+    }
+
+    async function writeProjectToFolder(files) {
+      const root = await window.showDirectoryPicker({ mode: "readwrite" });
+      const project = await root.getDirectoryHandle(slugify(titleText()), { create: true });
+      for (const [path, content] of Object.entries(files)) {
+        const parts = path.split("/");
+        let folder = project;
+        while (parts.length > 1) {
+          folder = await folder.getDirectoryHandle(parts.shift(), { create: true });
+        }
+        const file = await folder.getFileHandle(parts[0], { create: true });
+        const writable = await file.createWritable();
+        await writable.write(content);
+        await writable.close();
+      }
+    }
+
+    function downloadFile(path, content) {
+      const blob = new Blob([content], { type: "text/plain" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `${slugify(titleText())}-${path.replace(/[/.]/g, "_")}`;
+      document.body.appendChild(link);
+      link.click();
+      URL.revokeObjectURL(link.href);
+      link.remove();
+    }
+
+    async function exportProject() {
+      if (!dependenciesReady()) return;
+      const files = generatedFiles();
+      if ("showDirectoryPicker" in window) {
+        try {
+          await writeProjectToFolder(files);
+          elements.dependencyMessage.textContent = "Project exported.";
+          return;
+        } catch (error) {
+          if (error.name === "AbortError") return;
+        }
+      }
+      Object.entries(files).forEach(([path, content]) => downloadFile(path, content));
+      elements.dependencyMessage.textContent = "Downloaded project files.";
+    }
+
+    function setDemo() {
+      state.script = [
+        makeBlock("background"),
+        makeBlock("player"),
+        makeBlock("movePlayer"),
+        makeBlock("keepOnscreen"),
+        makeBlock("goal"),
+        { ...makeBlock("touchGoal"), children: [makeBlock("addScore"), makeBlock("resetPlayer")] },
+        makeBlock("drawEverything")
+      ];
+      if (targetKey() === "3ds-3d") {
+        state.script = [makeBlock("sceneColor"), makeBlock("dpadShift"), makeBlock("pulseScene")];
+      }
+      render();
+    }
+
+    elements.scriptDrop.addEventListener("dragover", (event) => {
+      if (!dependenciesReady()) return;
+      event.preventDefault();
+      elements.scriptDrop.classList.add("drag-over");
+    });
+
+    elements.scriptDrop.addEventListener("dragleave", () => {
+      elements.scriptDrop.classList.remove("drag-over");
+    });
+
+    elements.scriptDrop.addEventListener("drop", (event) => {
+      event.preventDefault();
+      elements.scriptDrop.classList.remove("drag-over");
+      const type = event.dataTransfer.getData("text/plain");
+      if (type && blockDefs[type]) addBlock(type);
+    });
+
+    document.addEventListener("dragover", (event) => {
+      const slot = event.target.closest(".inner-slot");
+      if (slot && dependenciesReady()) {
+        event.preventDefault();
+        slot.classList.add("drag-over");
+      }
+    });
+
+    document.addEventListener("dragleave", (event) => {
+      const slot = event.target.closest(".inner-slot");
+      if (slot) slot.classList.remove("drag-over");
+    });
+
+    document.addEventListener("drop", (event) => {
+      const slot = event.target.closest(".inner-slot");
+      if (!slot || !dependenciesReady()) return;
+      event.preventDefault();
+      slot.classList.remove("drag-over");
+      const type = event.dataTransfer.getData("text/plain");
+      if (type && blockDefs[type]) addBlock(type, slot.dataset.parentId);
+    });
+
+    document.addEventListener("click", (event) => {
+      const preview = event.target.closest("[data-preview]");
+      if (preview) {
+        state.previewFile = preview.dataset.preview;
+        renderPreview();
+      }
+      const action = event.target.closest("[data-action]");
+      if (action) {
+        const id = action.dataset.blockId;
+        if (action.dataset.action === "delete") removeBlock(id);
+        if (action.dataset.action === "up") moveBlock(id, -1);
+        if (action.dataset.action === "down") moveBlock(id, 1);
+        render();
+      }
+    });
+
+    document.addEventListener("input", (event) => {
+      const field = event.target.closest("[data-block-id][data-field]");
+      if (field) {
+        const block = findBlock(field.dataset.blockId);
+        if (block) block.values[field.dataset.field] = field.value;
+        renderPreview();
+        return;
+      }
+      if ([elements.gameName, elements.authorName, elements.platform, elements.style].includes(event.target)) {
+        state.script = state.script.filter((block) => blockDefs[block.type].targets.includes(targetKey()));
+        render();
+      }
+      if ([elements.manualDevkitpro, elements.manualDevkitarm, elements.manualMake].includes(event.target)) {
+        state.manualTouched = true;
+        renderDependencies();
+      }
+    });
+
+    elements.pickFolder.addEventListener("click", pickFolder);
+    elements.pickFiles.addEventListener("click", () => elements.fileProof.click());
+    elements.folderFallback.addEventListener("change", () => scanFallbackFiles(elements.folderFallback.files));
+    elements.fileProof.addEventListener("change", () => scanFallbackFiles(elements.fileProof.files));
+    elements.resetDemo.addEventListener("click", setDemo);
+    elements.clearScript.addEventListener("click", () => {
+      state.script = [];
+      render();
+    });
+    elements.copyCode.addEventListener("click", async () => {
+      await navigator.clipboard.writeText(elements.codePreview.textContent);
+      elements.fileStatus.textContent = `${state.previewFile} copied`;
+    });
+    elements.exportProject.addEventListener("click", exportProject);
+
+    setDemo();
+  </script>
+</body>
+</html>
